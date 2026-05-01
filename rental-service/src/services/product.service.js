@@ -449,10 +449,19 @@ const topKFromMap = (countMap, k) => {
  * @returns {Promise<object>} top categories payload
  */
 export const getTopCategories = async (renterId, k) => {
-  const limit = ensurePositiveInt(k) || 5;
+  let limit = 5;
+  if (k !== undefined && k !== null && k !== "") {
+    const parsed = ensurePositiveInt(k);
+    if (!parsed) {
+      const err = new Error("k must be a positive integer");
+      err.status = 400;
+      throw err;
+    }
+    limit = parsed;
+  }
   const rentals = await collectRentals({ renter_id: renterId });
   if (!rentals.length) {
-    return { userId: renterId, categories: [] };
+    return { userId: renterId, topCategories: [] };
   }
 
   const productIds = [...new Set(rentals.map((rental) => rental.productId))];
@@ -474,6 +483,6 @@ export const getTopCategories = async (renterId, k) => {
     counts.set(category, (counts.get(category) || 0) + 1);
   });
 
-  const top = topKFromMap(counts, limit).map((item) => item.category);
-  return { userId: renterId, categories: top };
+  const top = topKFromMap(counts, limit);
+  return { userId: renterId, topCategories: top };
 };

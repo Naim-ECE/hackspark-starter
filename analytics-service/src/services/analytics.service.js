@@ -1,5 +1,10 @@
 import dayjs from "dayjs";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore.js";
+import customParseFormat from "dayjs/plugin/customParseFormat.js";
 import { fetchDailyStats, fetchRentals, fetchProductsBatch } from "./centralApi.service.js";
+
+dayjs.extend(isSameOrBefore);
+dayjs.extend(customParseFormat);
 
 const isValidMonth = (value) => dayjs(value, "YYYY-MM", true).isValid();
 const isValidDate = (value) => dayjs(value, "YYYY-MM-DD", true).isValid();
@@ -23,7 +28,9 @@ const buildDailySeries = async (from, to) => {
   for (const month of months) {
     const dailyStats = await fetchDailyStats(month);
     dailyStats.forEach((item) => {
-      statsByDate.set(item.date, item.count);
+      // Normalize ISO timestamp (e.g. '2024-01-01T00:00:00.000Z') to 'YYYY-MM-DD'
+      const dateKey = dayjs(item.date).format("YYYY-MM-DD");
+      statsByDate.set(dateKey, item.count);
     });
   }
 
@@ -112,7 +119,9 @@ const buildMonthSeries = async (month) => {
   const dailyStats = await fetchDailyStats(month);
   const statsByDate = new Map();
   dailyStats.forEach((item) => {
-    statsByDate.set(item.date, item.count);
+    // Normalize ISO timestamp (e.g. '2024-01-01T00:00:00.000Z') to 'YYYY-MM-DD'
+    const dateKey = dayjs(item.date).format("YYYY-MM-DD");
+    statsByDate.set(dateKey, item.count);
   });
 
   const start = dayjs(`${month}-01`);
@@ -187,27 +196,9 @@ const getSeasonWindow = (date) => {
   return { start, end };
 };
 
-const collectSeasonDates = (date) => {
-  const target = dayjs(date);
-  const years = [target.year() - 1, target.year() - 2];
-  const dates = [];
-
-  years.forEach((year) => {
-    const base = target.year(year);
-    const { start, end } = getSeasonWindow(base.format("YYYY-MM-DD"));
-    let cursor = start;
-    while (cursor.isSameOrBefore(end)) {
-      dates.push(cursor.format("YYYY-MM-DD"));
-      cursor = cursor.add(1, "day");
-    }
-  });
-
-  return dates;
-};
-
-const fetchRentalsForDate = async (date) => {
-  const from = dayjs(date).startOf("day").toISOString();
-  const to = dayjs(date).endOf("day").toISOString();
+const fetchRentalsForDateRange = async (startDate, endDate) => {
+  const from = dayjs(startDate).startOf("day").toISOString();
+  const to = dayjs(endDate).endOf("day").toISOString();
   let page = 1;
   const limit = 100;
   const rentals = [];
@@ -243,11 +234,15 @@ export const getRecommendations = async (date, limit) => {
     throw err;
   }
 
-  const seasonDates = collectSeasonDates(date);
+  const target = dayjs(date);
+  const years = [target.year() - 1, target.year() - 2];
   const productCounts = new Map();
 
-  for (const day of seasonDates) {
-    const rentals = await fetchRentalsForDate(day);
+  for (const year of years) {
+    const base = target.year(year);
+    const { start, end } = getSeasonWindow(base.format("YYYY-MM-DD"));
+    const rentals = await fetchRentalsForDateRange(start, end);
+    
     rentals.forEach((rental) => {
       const productId = rental.productId;
       productCounts.set(productId, (productCounts.get(productId) || 0) + 1);

@@ -29,6 +29,7 @@ router.get("/rentals/merged-feed", proxyRental);
 router.get("/analytics/recommendations", proxyAnalytics);
 router.get("/analytics/trending", proxyAnalytics);
 router.get("/analytics/surge-days", proxyAnalytics);
+router.get("/analytics/peak-window", proxyAnalytics);
 
 router.get("/chat/sessions", proxyChat);
 router.get("/chat/:sessionId/history", proxyChat);

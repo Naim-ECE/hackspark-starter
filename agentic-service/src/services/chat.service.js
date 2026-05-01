@@ -6,7 +6,7 @@ import { getGroundingData } from "./grounding.service.js";
 const RENTPI_KEYWORDS = [
   "rental",
   "product",
-  "category",
+  "categor",
   "price",
   "discount",
   "available",

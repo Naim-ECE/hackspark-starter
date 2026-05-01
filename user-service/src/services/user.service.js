@@ -161,6 +161,7 @@ export const getUserDiscount = async (id) => {
 
   const securityScore = Number(user.securityScore) || 0;
   return {
+    userId: Number(user.id) || Number(id),
     discountPercent: discountFromScore(securityScore),
     securityScore
   };
