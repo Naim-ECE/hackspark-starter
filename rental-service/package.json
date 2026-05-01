@@ -1,0 +1,17 @@
+{
+  "name": "rental-service",
+  "version": "1.0.0",
+  "description": "Hackathon rental-service microservice",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "helmet": "^7.1.0",
+    "morgan": "^1.10.0",
+    "node-cache": "^5.1.2"
+  }
+}

@@ -1,30 +1,15 @@
-FROM node:20-alpine
+FROM node:20-alpine AS deps
 WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm ci --omit=dev
 
-# Create a minimal Express server for the gateway
-RUN npm init -y && npm install express cors
-
-RUN cat > server.js << 'EOF'
-const express = require('express');
-const cors = require('cors');
-const app = express();
-const PORT = process.env.PORT || 8000;
-
-app.use(cors());
-
-app.get('/status', (req, res) => {
-  res.status(200).json({ status: 'ok' });
-});
-
-app.use((req, res) => {
-  res.status(501).json({ error: 'Service not implemented' });
-});
-
-app.listen(PORT, () => {
-  console.log(`API Gateway listening on port ${PORT}`);
-});
-EOF
-
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=deps /app/node_modules ./node_modules
+COPY src ./src
+COPY package.json ./package.json
 EXPOSE 8000
-HEALTHCHECK --interval=15s --timeout=3s --retries=3 CMD node -e "require('http').get('http://localhost:8000/status', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
-CMD ["node", "server.js"]
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:8000/status').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+CMD ["node", "src/index.js"]
