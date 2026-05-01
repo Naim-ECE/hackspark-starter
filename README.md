@@ -75,6 +75,41 @@ docker-compose up --build
 # frontend          →  http://localhost:3000
 ```
 
+## Mock API (frontend visual testing)
+
+You can run the frontend entirely against a built-in mock API for fast visual/manual testing without real backend endpoints.
+
+Local dev (recommended):
+
+```bash
+cd frontend
+# enable mocks by creating frontend/.env with: VITE_MOCK_API=true
+echo "VITE_MOCK_API=true" > .env
+npm install
+# start Vite dev server (port 5173) or build for static preview
+npm run dev
+# or to build and serve via nginx in Docker use docker-compose (see below)
+```
+
+Docker (bring up full stack with mock mode):
+
+1. In the repo root create or edit `.env` and set:
+
+```text
+VITE_MOCK_API=true
+# optionally set FRONTEND_PORT=3000 and other vars
+```
+
+2. Then run:
+
+```bash
+docker-compose up --build
+```
+
+Notes:
+- The frontend uses `frontend/src/mocks.js` when `VITE_MOCK_API=true`.
+- To return to real backend calls, set `VITE_MOCK_API=false` (remove from `.env` or set to false) and restart the frontend.
+
 > **First build takes 3-5 minutes** as Docker pulls base images. Subsequent builds are faster due to layer caching.
 
 ---
