@@ -1,0 +1,16 @@
+{
+  "name": "analytics-service",
+  "version": "1.0.0",
+  "description": "RentPi analytics service",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "dayjs": "^1.11.13",
+    "express": "^4.19.2",
+    "helmet": "^7.1.0",
+    "morgan": "^1.10.0"
+  }
+}
