@@ -179,6 +179,7 @@ services:
       VITE_GATEWAY_URL:        http://localhost:8000
       NEXT_PUBLIC_GATEWAY_URL: http://localhost:8000
       GATEWAY_URL_INTERNAL:    http://api-gateway:8000 
+      VITE_MOCK_API:           ${VITE_MOCK_API:-false}
     depends_on:
       api-gateway:
         condition: service_healthy
